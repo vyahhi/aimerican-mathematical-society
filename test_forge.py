@@ -3,19 +3,24 @@
 from __future__ import annotations
 
 import io
+import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from app import archive_result, read_archive
 from forge import forge_conjecture, run_codex_agent
 
 
 class FakeAgents:
     def __init__(self) -> None:
         self.roles = []
+        self.prompts = []
 
     def __call__(self, role, prompt, schema, required_calls, progress):
         self.roles.append(role)
+        self.prompts.append((role, prompt))
         if role == "explorer":
             result = {
                 "title": "Euler polynomial",
@@ -56,7 +61,7 @@ class FakeAgents:
                 "wolfram_checks": [],
                 }
         else:
-            self.require(prompt, "1681" if self.roles.count("proofsmith") == 1 else "repair counterexample")
+            self.require(prompt, "1681" if self.roles.count("prover") == 1 else "repair counterexample")
             result = {
                 "repaired_conjecture": "f(41k) is divisible by 41",
                 "repair_type": "residue class",
@@ -167,7 +172,7 @@ class ForgeTest(unittest.TestCase):
             agent_runner=fake,
             kernel=lambda expression: "True",
         )
-        self.assertEqual(fake.roles, ["explorer", "falsifier", "proofsmith", "falsifier"])
+        self.assertEqual(fake.roles, ["explorer", "falsifier", "prover", "falsifier"])
         self.assertEqual(report["falsifier"]["verdict"], "falsified")
         self.assertEqual(report["validation_falsifier"]["verdict"], "survived_bounded_search")
         self.assertTrue(report["certificate"]["passed"])
@@ -175,14 +180,35 @@ class ForgeTest(unittest.TestCase):
         self.assertEqual(report["metrics"], {"ai_tokens": 500, "wolfram_calls": 1})
         explorer_report = next(event for event in events if event["type"] == "agent_report")
         self.assertIn("never produce a composite", explorer_report["summary"])
+        self.assertEqual(explorer_report["object_definition"], "f(n)=n^2+n+41")
         self.assertEqual(events[-1]["type"], "round_completed")
 
     def test_empty_seed_starts_autonomous_discovery(self):
         fake = FakeAgents()
         report = forge_conjecture(" ", agent_runner=fake, kernel=lambda x: "True")
-        self.assertEqual(fake.roles, ["explorer", "falsifier", "proofsmith", "falsifier"])
+        self.assertEqual(fake.roles, ["explorer", "falsifier", "prover", "falsifier"])
         self.assertTrue(report["seed"]["autonomous"])
         self.assertEqual(report["seed"]["topic"], "Euler polynomial")
+
+    def test_prover_is_told_to_stay_within_the_explorers_object(self):
+        fake = FakeAgents()
+        forge_conjecture("Explore n^2+n+41", agent_runner=fake, kernel=lambda x: "True")
+        prover_prompt = next(prompt for role, prompt in fake.prompts if role == "prover")
+        self.assertIn("Stay strictly within the\nmathematical object", prover_prompt)
+        self.assertIn("The current object is $n^2+n+41$", prover_prompt)
+
+    def test_unrelated_euler_hint_is_absent_for_other_objects(self):
+        fake = FakeAgents()
+
+        def cubic_agents(role, prompt, schema, required_calls, progress):
+            result = fake(role, prompt, schema, required_calls, progress)
+            if role == "explorer":
+                result["object_definition"] = "P(n)=n^3-n+103"
+            return result
+
+        forge_conjecture("Explore a cubic", agent_runner=cubic_agents, kernel=lambda x: "True")
+        prover_prompt = next(prompt for role, prompt in fake.prompts if role == "prover")
+        self.assertNotIn("n^2+n+41", prover_prompt)
 
     def test_stops_after_max_rounds_when_repairs_keep_breaking(self):
         fake = FakeAgents()
@@ -203,7 +229,46 @@ class ForgeTest(unittest.TestCase):
         self.assertEqual(report["termination"], "max_rounds")
         self.assertEqual(len(report["rounds"]), 3)
         self.assertFalse(report["certificate"]["passed"])
-        self.assertEqual(fake.roles.count("proofsmith"), 3)
+        self.assertEqual(fake.roles.count("prover"), 3)
+
+    def test_completed_results_are_saved_as_json_and_markdown(self):
+        report = forge_conjecture(
+            "Explore n^2+n+41",
+            agent_runner=FakeAgents(),
+            kernel=lambda expression: "True",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            json_path = root / "archive.json"
+            markdown_path = root / "archive.md"
+            record = archive_result(
+                report, 2, "job-123", json_path, markdown_path
+            )
+            saved = read_archive(json_path)
+            self.assertEqual(saved[0]["id"], record["id"])
+            self.assertEqual(saved[0]["cycle"], 2)
+            self.assertEqual(saved[0]["status"], "certified")
+            self.assertEqual(saved[0]["object_definition"], "f(n)=n^2+n+41")
+            self.assertIn("Final repaired theorem", markdown_path.read_text())
+            self.assertIn("Object definition", markdown_path.read_text())
+            self.assertIn("f(41k) is divisible by 41", markdown_path.read_text())
+            self.assertEqual(len(json.loads(json_path.read_text())), 1)
+
+    def test_uncertified_results_are_also_archived(self):
+        report = forge_conjecture(
+            "Explore n^2+n+41",
+            agent_runner=FakeAgents(),
+            kernel=lambda expression: "True",
+        )
+        report["certificate"]["passed"] = False
+        report["termination"] = "max_rounds"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            record = archive_result(
+                report, 3, "job-uncertified", root / "archive.json", root / "archive.md"
+            )
+            self.assertEqual(record["status"], "not certified")
+            self.assertEqual(record["termination"], "max_rounds")
 
 
 if __name__ == "__main__":

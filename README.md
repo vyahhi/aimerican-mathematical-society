@@ -5,7 +5,7 @@ mathematicians. Codex agents hallucinate conjectures, use exact Wolfram Language
 computations to explore and attack them, repair false statements, and ask an
 independent local Wolfram Engine to check the final certificate.
 
-The browser UI shows the Explorer, Falsifier, Proofsmith, and Kernel Referee in
+The browser UI shows the Explorer, Falsifier, Prover, and Kernel Referee in
 real time, including Codex prompts and outputs, AI-token usage, Wolfram MCP calls,
 counterexamples, repairs, and certificates.
 
@@ -14,10 +14,15 @@ counterexamples, repairs, and certificates.
 1. **Explorer** chooses a mathematical direction and proposes a conjecture.
 2. **Falsifier** searches for the smallest counterexample under a declared
    domain-specific ordering.
-3. **Proofsmith** repairs the theorem using the counterexample and exact checks.
+3. **Prover** repairs the theorem using the counterexample and exact checks.
 4. **Falsifier** attacks the repaired theorem again.
 5. **Kernel Referee** independently evaluates its certificate.
 6. After certification or the maximum repair rounds, a new cycle begins.
+
+The Prover/Falsifier repair loop is bounded by `max_rounds` (3 by default), so
+it cannot run indefinitely on one conjecture. Every completed cycle is archived,
+including attempts that reach the limit without a passed certificate, and then
+Explorer begins a new conjecture.
 
 Codex agents use JSON Schema-constrained output. The default agent model is
 `gpt-5.6-sol` with `high` reasoning. The harness counts exact
@@ -42,6 +47,9 @@ Wolfram MCP calls.
 
 No OpenAI API key or separate web framework is required. Authentication is
 provided by the signed-in Codex installation.
+
+KaTeX 0.16.22 is vendored under `static/vendor/katex`, so mathematical output
+renders locally without a CDN or a separate frontend installation.
 
 ## 1. Verify the prerequisites
 
@@ -87,6 +95,13 @@ python3 app.py
 Open [http://127.0.0.1:8765](http://127.0.0.1:8765), then press **LAUNCH**.
 The society continues inventing new conjectures until **STOP** is pressed. Stop
 waits for the currently active agent to finish.
+
+Past conjectures are available at
+[http://127.0.0.1:8765/archive.html](http://127.0.0.1:8765/archive.html). The
+server stores structured records in `data/certified-conjectures.json` and a
+readable theorem notebook in `data/certified-conjectures.md`. Both files persist
+across server restarts. The archive page polls the server's in-memory history
+every three seconds, so an open page updates automatically after each cycle.
 
 ## Run from the CLI
 

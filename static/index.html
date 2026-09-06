@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AImerican Mathematical Society</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/katex/katex.min.css">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <div class="noise"></div>
   <main>
-    <nav><a class="brand"><i>∴</i><span><strong>AI</strong>MERICAN MATHEMATICAL SOCIETY</span></a><span>CODEX × WOLFRAM</span></nav>
+    <nav><a class="brand" href="./"><i>∴</i><span><strong>AI</strong>MERICAN MATHEMATICAL SOCIETY</span></a><a class="archive-link" href="./archive.html">ALL CONJECTURES</a></nav>
     <header>
       <h1><span>AI hallucinates conjectures.</span><br><em>Wolfram tests them.</em><br>AI fixes what breaks.</h1>
     </header>
@@ -20,20 +21,20 @@
         <button id="ignite" class="ignite" type="submit">LAUNCH</button>
       </form>
 
-      <section class="machine">
-        <article class="agent agent-a"><b>01</b><strong>EXPLORER</strong></article>
-        <article class="agent agent-b"><b>02</b><strong>FALSIFIER</strong></article>
-        <article class="agent agent-c"><b>03</b><strong>PROOFSMITH</strong></article>
-      </section>
+      <section class="machine" aria-hidden="true"></section>
     </section>
 
     <section id="run" class="run hidden">
-      <div class="run-head"><h2>Live society</h2><div><span id="cycle-label">Cycle 1</span><span id="usage-totals">0 AI tokens (Sol high) · 0 Wolfram MCP calls</span><span id="timer">00:00</span><button id="stop" type="button">STOP</button></div></div>
+      <div class="run-head"><h2>Research session</h2><div><span id="cycle-label">Cycle 1</span><span id="usage-totals">0 AI tokens (Sol high) · 0 Wolfram MCP calls</span><span id="timer">00:00</span><button id="stop" type="button">STOP</button></div></div>
       <div id="agent-cards" class="agent-cards">
-        <article data-agent="explorer"><span>01</span><b>EXPLORER</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
-        <article data-agent="falsifier"><span>02</span><b>FALSIFIER</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
-        <article data-agent="proofsmith"><span>03</span><b>PROOFSMITH</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
-        <article data-agent="kernel_referee"><span>04</span><b>KERNEL REFEREE</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="explorer"><div class="agent-card-head"><div class="agent-face-wrap"><img class="agent-face" src="./agent-explorer.png" alt="Pixel-art portrait of the Explorer"></div><div class="agent-identity"><b>EXPLORER</b><em>waiting</em></div></div><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="falsifier"><div class="agent-card-head"><div class="agent-face-wrap"><img class="agent-face" src="./agent-falsifier.png" alt="Pixel-art portrait of the Falsifier"></div><div class="agent-identity"><b>FALSIFIER</b><em>waiting</em></div></div><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="prover"><div class="agent-card-head"><div class="agent-face-wrap"><img class="agent-face" src="./agent-prover.png" alt="Pixel-art portrait of the Prover"></div><div class="agent-identity"><b>PROVER</b><em>waiting</em></div></div><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="kernel_referee"><div class="agent-card-head"><div class="agent-face-wrap"><img class="agent-face" src="./agent-kernel-referee.png" alt="Pixel-art portrait of the Kernel Referee"></div><div class="agent-identity"><b>KERNEL REFEREE</b><em>waiting</em></div></div><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+      </div>
+      <div class="research-brief" aria-live="polite">
+        <strong id="research-stage">Exploring</strong>
+        <p id="research-brief">Choosing a mathematical direction…</p>
       </div>
       <div id="log" class="log"></div>
     </section>
@@ -47,6 +48,7 @@
     </section>
     <section id="error" class="error hidden"></section>
   </main>
+  <script src="./vendor/katex/katex.min.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

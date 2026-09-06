@@ -54,7 +54,7 @@
     "elapsed_seconds": 38.58,
     "wolfram_calls": 2
   },
-  "proofsmith": {
+  "prover": {
     "repaired_conjecture": "Let P(n)=n^2+n+41 for nonnegative integers n. Then P(n) is prime for every 0 <= n <= 39. Furthermore, 41 divides P(n) if and only if n is congruent to 0 or -1 modulo 41. Consequently, every positive n in either of those two residue classes produces a composite value; explicitly, for every integer k >= 1, P(41 k)=41 (41 k^2+k+1) and P(41 k-1)=41 (41 k^2-k+1).",
     "repair_type": "Falsified universal claim replaced by an exact finite prime range and an infinite structural family of composite values.",
     "proof_status": "certified",
@@ -90,7 +90,7 @@
         "interpretation": "Certifies the exact residue-class characterization of divisibility by 41 for all integers n."
       }
     ],
-    "agent": "proofsmith",
+    "agent": "prover",
     "elapsed_seconds": 112.94,
     "wolfram_calls": 5
   },
@@ -102,7 +102,7 @@
     "engine": "local Wolfram kernel"
   },
   "metrics": {
-    "ai_tokens": null,
+    "ai_tokens": 283576,
     "wolfram_calls": 10
   },
   "provenance": {

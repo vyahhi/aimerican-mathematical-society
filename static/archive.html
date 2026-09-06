@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>All Conjectures — AImerican Mathematical Society</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="./archive.css">
+</head>
+<body>
+  <nav><a class="brand" href="./"><i>∴</i><span><strong>AI</strong>MERICAN MATHEMATICAL SOCIETY</span></a><a href="./">NEW RESEARCH</a></nav>
+  <main>
+    <header>
+      <h1>All conjectures</h1>
+      <div id="archive-count" class="count">Loading…</div>
+    </header>
+    <section class="notebook">
+      <div id="empty" class="empty hidden">No conjectures archived yet. Start a research session and the first successful result will appear here.</div>
+      <div class="table-wrap">
+        <table id="archive-table" class="hidden">
+          <thead><tr><th>When</th><th>Original conjecture</th><th>Final theorem and proof</th><th>Status</th></tr></thead>
+          <tbody id="archive-body"></tbody>
+        </table>
+      </div>
+      <div id="archive-error" class="error hidden"></div>
+    </section>
+  </main>
+  <script src="./vendor/katex/katex.min.js"></script>
+  <script src="./archive.js"></script>
+</body>
+</html>
