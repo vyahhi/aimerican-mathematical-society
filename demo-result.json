@@ -1,0 +1,115 @@
+{
+  "seed": {
+    "topic": "Explore the prime-generating polynomial n^2 + n + 41",
+    "search_limit": 5000
+  },
+  "explorer": {
+    "title": "Euler\u2019s Prime-Generating Polynomial",
+    "object_definition": "Define P(n) = n^2 + n + 41 for every nonnegative integer n.",
+    "domain": "Number theory: prime-generating polynomials",
+    "observations": [
+      "The exact values P(0) through P(10) are 41, 43, 47, 53, 61, 71, 83, 97, 113, 131, and 151.",
+      "Wolfram\u2019s exact PrimeQ test returned True for every P(n) from n = 0 through n = 39.",
+      "No case at n = 40 or beyond was tested.",
+      "This finite evidence is compelling but does not prove a universal statement."
+    ],
+    "conjecture": "P(n) is prime for every nonnegative integer n.",
+    "plain_english_summary": "This simple number-making rule produces a prime for each of its first forty inputs. The tempting conjecture is that it will keep producing primes forever.",
+    "why_it_looks_true": "The conjecture survives 40 consecutive initial cases. Throughout the tested interval, the polynomial grows from 41 to 1601 without producing a single composite value, making the universal pattern look unusually persuasive.",
+    "wolfram_evidence": [
+      {
+        "expression": "With[{P = Function[{n}, n^2 + n + 41]}, Table[{n, P[n]}, {n, 0, 10}]]",
+        "result": "{{0, 41}, {1, 43}, {2, 47}, {3, 53}, {4, 61}, {5, 71}, {6, 83}, {7, 97}, {8, 113}, {9, 131}, {10, 151}}",
+        "interpretation": "This generates exact initial values of P(n)."
+      },
+      {
+        "expression": "With[{P = Function[{n}, n^2 + n + 41]}, Table[{n, P[n], PrimeQ[P[n]]}, {n, 0, 39}]]",
+        "result": "{{0, 41, True}, {1, 43, True}, {2, 47, True}, {3, 53, True}, {4, 61, True}, {5, 71, True}, {6, 83, True}, {7, 97, True}, {8, 113, True}, {9, 131, True}, {10, 151, True}, {11, 173, True}, {12, 197, True}, {13, 223, True}, {14, 251, True}, {15, 281, True}, {16, 313, True}, {17, 347, True}, {18, 383, True}, {19, 421, True}, {20, 461, True}, {21, 503, True}, {22, 547, True}, {23, 593, True}, {24, 641, True}, {25, 691, True}, {26, 743, True}, {27, 797, True}, {28, 853, True}, {29, 911, True}, {30, 971, True}, {31, 1033, True}, {32, 1097, True}, {33, 1163, True}, {34, 1231, True}, {35, 1301, True}, {36, 1373, True}, {37, 1447, True}, {38, 1523, True}, {39, 1601, True}}",
+        "interpretation": "Every one of the 40 permitted initial cases is reported prime."
+      }
+    ],
+    "agent": "explorer",
+    "elapsed_seconds": 46.83,
+    "wolfram_calls": 2
+  },
+  "falsifier": {
+    "verdict": "falsified",
+    "search_strategy": "Used the exact predicate !PrimeQ[n^2+n+41] over Range[0,5000] in ascending order and selected the first match. Independently confirmed its factorization and confirmed every preceding case n=0 through 39 is prime.",
+    "search_range": "0 <= n <= 5000, ascending",
+    "smallest_counterexample": "n = 40; P(40) = 1681 = 41^2",
+    "counterexample_explanation": "At n=40, P(40)=40^2+40+41=1681=41\u00d741, so it is composite. Every admissible n below 40 passes PrimeQ, making n=40 the smallest counterexample.",
+    "wolfram_checks": [
+      {
+        "expression": "FirstCase[Range[0, 5000], n_ /; ! PrimeQ[n^2 + n + 41] :> {n, n^2 + n + 41}, Missing[\"NotFound\"]]",
+        "result": "{40, 1681}",
+        "interpretation": "The exact ascending search finds n=40 as the first composite-producing input."
+      },
+      {
+        "expression": "{FactorInteger[40^2 + 40 + 41], FullSimplify[40^2 + 40 + 41 == 41^2], And @@ Table[PrimeQ[n^2 + n + 41], {n, 0, 39}]}",
+        "result": "{{{41, 2}}, True, True}",
+        "interpretation": "1681 has prime factorization 41^2, direct substitution confirms the equality, and every preceding value from n=0 through 39 is prime."
+      }
+    ],
+    "agent": "falsifier",
+    "elapsed_seconds": 38.58,
+    "wolfram_calls": 2
+  },
+  "proofsmith": {
+    "repaired_conjecture": "Let P(n)=n^2+n+41 for nonnegative integers n. Then P(n) is prime for every 0 <= n <= 39. Furthermore, 41 divides P(n) if and only if n is congruent to 0 or -1 modulo 41. Consequently, every positive n in either of those two residue classes produces a composite value; explicitly, for every integer k >= 1, P(41 k)=41 (41 k^2+k+1) and P(41 k-1)=41 (41 k^2-k+1).",
+    "repair_type": "Falsified universal claim replaced by an exact finite prime range and an infinite structural family of composite values.",
+    "proof_status": "certified",
+    "proof_outline": [
+      "The original conjecture fails first at n=40: P(40)=1681=41^2.",
+      "Exact primality testing certifies every value P(n) for 0 <= n <= 39. This proves the stated finite-range claim; it is not treated as evidence for an unrestricted claim.",
+      "Modulo 41, P(n) is congruent to n(n+1). Since 41 is prime, this vanishes exactly when n is congruent to 0 or -1 modulo 41.",
+      "Substitution gives P(41k)=41(41k^2+k+1) and P(41k-1)=41(41k^2-k+1). For k >= 1, each cofactor is greater than 1, so these values are composite.",
+      "Thus the repaired statement supplies infinitely many counterexamples while retaining the exact exceptional initial run of 40 primes."
+    ],
+    "certificate_expression": "{And @@ Table[PrimeQ[n^2 + n + 41], {n, 0, 39}], Resolve[ForAll[n, Equivalent[Mod[n^2 + n + 41, 41] == 0, Mod[n, 41] == 0 || Mod[n, 41] == 40]], Integers], FullSimplify[{(41 k)^2 + 41 k + 41 == 41 (41 k^2 + k + 1), (41 k - 1)^2 + (41 k - 1) + 41 == 41 (41 k^2 - k + 1)}, Element[k, Integers]], FactorInteger[40^2 + 40 + 41]}",
+    "certificate_expected_result": "{True, True, {True, True}, {{41, 2}}}",
+    "discoveries": [
+      "The prime-generating run is exactly certified through n=39, and the next input already fails.",
+      "The two residue classes n congruent to 0 and -1 modulo 41 contain infinitely many composite-producing inputs.",
+      "The qualification 'positive' is necessary for the class n congruent to 0 modulo 41, because n=0 gives the prime value 41.",
+      "No assertion is made that every input n >= 40 produces a composite value."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "FullSimplify[{(41 k)^2 + 41 k + 41 == 41 (41 k^2 + k + 1), (41 k - 1)^2 + (41 k - 1) + 41 == 41 (41 k^2 - k + 1)}, Element[k, Integers]]",
+        "result": "{True, True}",
+        "interpretation": "Symbolically verifies both parametrized factorizations for every integer k."
+      },
+      {
+        "expression": "{And @@ Table[PrimeQ[n^2 + n + 41], {n, 0, 39}], 40^2 + 40 + 41, FactorInteger[40^2 + 40 + 41], And @@ Table[! PrimeQ[n^2 + n + 41], {n, Join[Range[40, 410, 41], Range[41, 410, 41]]}]}",
+        "result": "{True, 1681, {{41, 2}}, True}",
+        "interpretation": "Independently checks the precise initial prime range, the first counterexample and its factorization, and sample members of both infinite residue families."
+      },
+      {
+        "expression": "Resolve[ForAll[n, Mod[n^2 + n + 41, 41] == 0 \u29e6 (Mod[n, 41] == 0 || Mod[n, 41] == 40)], Integers]",
+        "result": "True",
+        "interpretation": "Certifies the exact residue-class characterization of divisibility by 41 for all integers n."
+      }
+    ],
+    "agent": "proofsmith",
+    "elapsed_seconds": 112.94,
+    "wolfram_calls": 5
+  },
+  "certificate": {
+    "expression": "{And @@ Table[PrimeQ[n^2 + n + 41], {n, 0, 39}], Resolve[ForAll[n, Equivalent[Mod[n^2 + n + 41, 41] == 0, Mod[n, 41] == 0 || Mod[n, 41] == 40]], Integers], FullSimplify[{(41 k)^2 + 41 k + 41 == 41 (41 k^2 + k + 1), (41 k - 1)^2 + (41 k - 1) + 41 == 41 (41 k^2 - k + 1)}, Element[k, Integers]], FactorInteger[40^2 + 40 + 41]}",
+    "expected": "{True, True, {True, True}, {{41, 2}}}",
+    "actual": "{True, True, {True, True}, {{41, 2}}}",
+    "passed": true,
+    "engine": "local Wolfram kernel"
+  },
+  "metrics": {
+    "ai_tokens": null,
+    "wolfram_calls": 10
+  },
+  "provenance": {
+    "agent_harness": "Codex exec",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "high",
+    "math_transport": "MCP stdio",
+    "math_engine": "Wolfram"
+  }
+}

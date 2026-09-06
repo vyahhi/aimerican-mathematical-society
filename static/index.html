@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AImerican Mathematical Society</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <main>
+    <nav><a class="brand"><i>∴</i><span><strong>AI</strong>MERICAN MATHEMATICAL SOCIETY</span></a><span>CODEX × WOLFRAM</span></nav>
+    <header>
+      <h1><span>AI hallucinates conjectures.</span><br><em>Wolfram tests them.</em><br>AI fixes what breaks.</h1>
+    </header>
+
+    <section class="forge-grid">
+      <form id="forge-form" class="console">
+        <button id="ignite" class="ignite" type="submit">LAUNCH</button>
+      </form>
+
+      <section class="machine">
+        <article class="agent agent-a"><b>01</b><strong>EXPLORER</strong></article>
+        <article class="agent agent-b"><b>02</b><strong>FALSIFIER</strong></article>
+        <article class="agent agent-c"><b>03</b><strong>PROOFSMITH</strong></article>
+      </section>
+    </section>
+
+    <section id="run" class="run hidden">
+      <div class="run-head"><h2>Live society</h2><div><span id="cycle-label">Cycle 1</span><span id="usage-totals">0 AI tokens (Sol high) · 0 Wolfram MCP calls</span><span id="timer">00:00</span><button id="stop" type="button">STOP</button></div></div>
+      <div id="agent-cards" class="agent-cards">
+        <article data-agent="explorer"><span>01</span><b>EXPLORER</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="falsifier"><span>02</span><b>FALSIFIER</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="proofsmith"><span>03</span><b>PROOFSMITH</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+        <article data-agent="kernel_referee"><span>04</span><b>KERNEL REFEREE</b><em>waiting</em><div class="meter"><i></i></div><small>0 AI tokens (Sol high) · 0 Wolfram MCP calls</small></article>
+      </div>
+      <div id="log" class="log"></div>
+    </section>
+
+    <section id="result" class="result hidden">
+      <div class="chapter proposed"><div class="number">I</div><article><div class="tag">PROPOSED</div><h2 id="conjecture"></h2><p id="plain-summary" class="explainer"></p><p id="definition" class="formula"></p><details><summary>Wolfram evidence</summary><div id="evidence" class="math-list"></div></details></article></div>
+      <div class="chapter destroyed"><div class="number">II</div><article><div id="falsifier-tag" class="tag">DESTROYED</div><h2 id="counterexample"></h2><details><summary>Attack coverage</summary><p id="falsifier-coverage"></p><div id="falsifier-math" class="math-list"></div></details></article></div>
+      <div class="chapter repaired"><div class="number">III</div><article><div class="tag">REPAIRED</div><h2 id="repair"></h2><details><summary>Proof and checks</summary><ol id="proof"></ol><div id="proof-math" class="math-list"></div></details></article></div>
+      <div id="certificate" class="certificate"><details><summary>Wolfram certificate</summary><code id="cert-expression"></code></details><strong id="cert-status">—</strong></div>
+      <button id="again" class="again">NEW SESSION</button>
+    </section>
+    <section id="error" class="error hidden"></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

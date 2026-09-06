@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "verdict": {"type": "string", "enum": ["falsified", "survived_bounded_search"]},
+    "domain_model": {"type": "string"},
+    "simplicity_ordering": {"type": "string"},
+    "search_strategy": {"type": "string"},
+    "search_range": {"type": "string"},
+    "attack_units_used": {"type": "integer", "minimum": 0},
+    "uncovered_regions": {"type": "string"},
+    "smallest_counterexample": {"type": "string"},
+    "counterexample_explanation": {"type": "string"},
+    "wolfram_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "expression": {"type": "string"},
+          "result": {"type": "string"},
+          "interpretation": {"type": "string"}
+        },
+        "required": ["expression", "result", "interpretation"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["verdict", "domain_model", "simplicity_ordering", "search_strategy", "search_range", "attack_units_used", "uncovered_regions", "smallest_counterexample", "counterexample_explanation", "wolfram_checks"],
+  "additionalProperties": false
+}

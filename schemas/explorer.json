@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {"type": "string"},
+    "object_definition": {"type": "string"},
+    "domain": {"type": "string"},
+    "observations": {"type": "array", "items": {"type": "string"}},
+    "conjecture": {"type": "string"},
+    "plain_english_summary": {"type": "string"},
+    "why_it_looks_true": {"type": "string"},
+    "wolfram_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "expression": {"type": "string"},
+          "result": {"type": "string"},
+          "interpretation": {"type": "string"}
+        },
+        "required": ["expression", "result", "interpretation"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["title", "object_definition", "domain", "observations", "conjecture", "plain_english_summary", "why_it_looks_true", "wolfram_evidence"],
+  "additionalProperties": false
+}

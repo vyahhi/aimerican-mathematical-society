@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "repaired_conjecture": {"type": "string"},
+    "repair_type": {"type": "string"},
+    "proof_status": {"type": "string", "enum": ["certified", "bounded_evidence", "failed"]},
+    "proof_outline": {"type": "array", "items": {"type": "string"}},
+    "certificate_expression": {"type": "string"},
+    "certificate_expected_result": {"type": "string"},
+    "discoveries": {"type": "array", "items": {"type": "string"}},
+    "wolfram_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "expression": {"type": "string"},
+          "result": {"type": "string"},
+          "interpretation": {"type": "string"}
+        },
+        "required": ["expression", "result", "interpretation"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["repaired_conjecture", "repair_type", "proof_status", "proof_outline", "certificate_expression", "certificate_expected_result", "discoveries", "wolfram_checks"],
+  "additionalProperties": false
+}

@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import io
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from forge import forge_conjecture, run_codex_agent
+
+
+class FakeAgents:
+    def __init__(self) -> None:
+        self.roles = []
+
+    def __call__(self, role, prompt, schema, required_calls, progress):
+        self.roles.append(role)
+        if role == "explorer":
+            result = {
+                "title": "Euler polynomial",
+                "object_definition": "f(n)=n^2+n+41",
+                "domain": "n >= 0",
+                "observations": ["first 40 values prime"],
+                "conjecture": "f(n) is prime for every n >= 0",
+                "plain_english_summary": "This rule produces primes for a surprisingly long opening run. The conjecture says it will never produce a composite number.",
+                "why_it_looks_true": "long initial streak",
+                "wolfram_evidence": [],
+            }
+        elif role == "falsifier":
+            if "REPAIRED THEOREM" in prompt:
+                result = {
+                    "verdict": "survived_bounded_search",
+                    "domain_model": "nonnegative integers",
+                    "simplicity_ordering": "ascending n",
+                    "search_strategy": "exact attack",
+                    "search_range": "0..5000",
+                    "attack_units_used": 5001,
+                    "uncovered_regions": "n > 5000",
+                    "smallest_counterexample": "",
+                    "counterexample_explanation": "none found",
+                    "wolfram_checks": [],
+                }
+            else:
+                self.require(prompt, "f(n) is prime")
+                result = {
+                "verdict": "falsified",
+                "domain_model": "nonnegative integers",
+                "simplicity_ordering": "ascending n",
+                "search_strategy": "ascending exact search",
+                "search_range": "0..5000",
+                "attack_units_used": 41,
+                "uncovered_regions": "not needed after smallest failure",
+                "smallest_counterexample": "n=40, f(n)=1681=41^2",
+                "counterexample_explanation": "composite",
+                "wolfram_checks": [],
+                }
+        else:
+            self.require(prompt, "1681" if self.roles.count("proofsmith") == 1 else "repair counterexample")
+            result = {
+                "repaired_conjecture": "f(41k) is divisible by 41",
+                "repair_type": "residue class",
+                "proof_status": "certified",
+                "proof_outline": ["substitute n=41k", "factor 41"],
+                "certificate_expression": "FullSimplify[Mod[(41 k)^2 + 41 k + 41, 41] == 0, Element[k, Integers]]",
+                "certificate_expected_result": "True",
+                "discoveries": ["infinite composite family"],
+                "wolfram_checks": [],
+            }
+        result["ai_tokens"] = 125
+        result["token_usage"] = {
+            "input_tokens": 100,
+            "cached_input_tokens": 40,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 25,
+            "reasoning_output_tokens": 10,
+        }
+        progress({"type": "ai_usage", "agent": role, "ai_tokens": 125})
+        progress({"type": "agent_completed", "agent": role, "ai_tokens": 125})
+        return result
+
+    @staticmethod
+    def require(text, needle):
+        if needle not in text:
+            raise AssertionError(f"missing handoff data: {needle}")
+
+
+class ForgeTest(unittest.TestCase):
+    def test_codex_usage_is_counted_without_double_counting_breakdowns(self):
+        events = []
+        commands = []
+
+        class CompletedProcess:
+            def __init__(self, stdout):
+                self.stdout = io.StringIO(stdout)
+                self.returncode = 0
+
+            def wait(self):
+                return self.returncode
+
+            def kill(self):
+                self.returncode = -9
+
+        def completed_run(command, **kwargs):
+            del kwargs
+            commands.append(command)
+            output_path = Path(command[command.index("--output-last-message") + 1])
+            output_path.write_text(
+                '{"title":"Test","object_definition":"x","domain":"x",'
+                '"observations":[],"conjecture":"x is x",'
+                '"plain_english_summary":"A readable result.",'
+                '"why_it_looks_true":"x","wolfram_evidence":[]}',
+                encoding="utf-8",
+            )
+            return CompletedProcess(
+                (
+                    '{"type":"item.completed","item":{"type":"reasoning",'
+                    '"text":"Checking the pattern."}}\n'
+                    '{"type":"item.completed","item":{"type":"mcp_tool_call",'
+                    '"server":"local_mathematica","tool":"evaluate_wolfram",'
+                    '"status":"completed","arguments":{"expression":"2+2"},'
+                    '"result":"4"}}\n'
+                    '{"type":"turn.completed","usage":'
+                    '{"input_tokens":1000,"cached_input_tokens":800,'
+                    '"cache_write_input_tokens":300,"output_tokens":200,'
+                    '"reasoning_output_tokens":75}}\n'
+                )
+            )
+
+        with patch("forge.subprocess.Popen", side_effect=completed_run):
+            report = run_codex_agent(
+                "explorer", "test", "explorer.json", 1, events.append
+            )
+
+        self.assertEqual(report["ai_tokens"], 1200)
+        self.assertIn("gpt-5.6-sol", commands[0])
+        self.assertIn('model_reasoning_effort="high"', commands[0])
+        self.assertEqual(
+            report["token_usage"],
+            {
+                "input_tokens": 1000,
+                "cached_input_tokens": 800,
+                "cache_write_input_tokens": 300,
+                "output_tokens": 200,
+                "reasoning_output_tokens": 75,
+            },
+        )
+        usage_event = next(event for event in events if event["type"] == "ai_usage")
+        self.assertEqual(usage_event["ai_tokens"], 1200)
+        prompt_event = next(event for event in events if event["type"] == "agent_prompt")
+        self.assertEqual(prompt_event["prompt"], "test")
+        self.assertEqual(prompt_event["model"], "gpt-5.6-sol")
+        wolfram_event = next(event for event in events if event["type"] == "wolfram_call")
+        self.assertEqual(wolfram_event["expression"], "2+2")
+        self.assertEqual(wolfram_event["result"], "4")
+        outputs = [event for event in events if event["type"] == "codex_output"]
+        self.assertEqual(outputs[0]["message"], "Checking the pattern.")
+        self.assertTrue(any(event["kind"] == "structured" for event in outputs))
+        self.assertIn("A readable result", outputs[-1]["message"])
+
+    def test_falsify_repair_and_independent_certificate(self):
+        fake = FakeAgents()
+        events = []
+        report = forge_conjecture(
+            "Explore n^2+n+41",
+            progress=events.append,
+            agent_runner=fake,
+            kernel=lambda expression: "True",
+        )
+        self.assertEqual(fake.roles, ["explorer", "falsifier", "proofsmith", "falsifier"])
+        self.assertEqual(report["falsifier"]["verdict"], "falsified")
+        self.assertEqual(report["validation_falsifier"]["verdict"], "survived_bounded_search")
+        self.assertTrue(report["certificate"]["passed"])
+        self.assertEqual(report["termination"], "certified")
+        self.assertEqual(report["metrics"], {"ai_tokens": 500, "wolfram_calls": 1})
+        explorer_report = next(event for event in events if event["type"] == "agent_report")
+        self.assertIn("never produce a composite", explorer_report["summary"])
+        self.assertEqual(events[-1]["type"], "round_completed")
+
+    def test_empty_seed_starts_autonomous_discovery(self):
+        fake = FakeAgents()
+        report = forge_conjecture(" ", agent_runner=fake, kernel=lambda x: "True")
+        self.assertEqual(fake.roles, ["explorer", "falsifier", "proofsmith", "falsifier"])
+        self.assertTrue(report["seed"]["autonomous"])
+        self.assertEqual(report["seed"]["topic"], "Euler polynomial")
+
+    def test_stops_after_max_rounds_when_repairs_keep_breaking(self):
+        fake = FakeAgents()
+
+        def always_break(role, prompt, schema, required_calls, progress):
+            result = fake(role, prompt, schema, required_calls, progress)
+            if role == "falsifier" and "REPAIRED THEOREM" in prompt:
+                result["verdict"] = "falsified"
+                result["smallest_counterexample"] = "repair counterexample"
+            return result
+
+        report = forge_conjecture(
+            "Explore n^2+n+41",
+            agent_runner=always_break,
+            kernel=lambda expression: self.fail("certificate must not run"),
+            max_rounds=3,
+        )
+        self.assertEqual(report["termination"], "max_rounds")
+        self.assertEqual(len(report["rounds"]), 3)
+        self.assertFalse(report["certificate"]["passed"])
+        self.assertEqual(fake.roles.count("proofsmith"), 3)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
