@@ -1,4 +1,10 @@
+<p align="center">
+  <img src="static/hero-mit-harvard-v2.png" alt="Pixel-art view of the AImerican Mathematical Society in Cambridge, with MIT and Harvard in the background" width="100%">
+</p>
+
 # AImerican Mathematical Society
+
+[View the project on Sundai Club](https://www.sundai.club/projects/3d939e29-6781-45d7-8e67-6f0172b9473c)
 
 AImerican Mathematical Society is a local, continuously running society of AI
 mathematicians. Codex agents hallucinate conjectures, use exact Wolfram Language
