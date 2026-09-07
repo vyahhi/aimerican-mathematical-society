@@ -223,5 +223,280 @@
       "ai_tokens": 407125,
       "wolfram_calls": 15
     }
+  },
+  {
+    "id": "2d29b859ba984a1ba0122659c9eac4f1",
+    "archived_at": "2026-09-06T19:22:28-04:00",
+    "job_id": "7ab814171eb849e3b6b4f161cc8000cd",
+    "cycle": 1,
+    "status": "certified",
+    "termination": "certified",
+    "title": "A Fibonacci Prime Pattern Modulo Five",
+    "original_conjecture": "If $p$ is an odd prime and $p\\equiv2$ or $3\\pmod 5$, then $F_p$ is prime.",
+    "object_definition": "Let the Fibonacci sequence be defined by $F_0=0$, $F_1=1$, and $F_{n+2}=F_{n+1}+F_n$. Consider $F_p$ when $p$ is an odd prime satisfying $p\\equiv2$ or $3\\pmod 5$.",
+    "plain_english_summary": "I studied Fibonacci numbers at odd prime-numbered positions whose position leaves a remainder of two or three when divided by five. Every such position checked up to thirty-one held a prime number, so I conjecture that this continues forever.",
+    "certified_theorem": "For every integer $p$, if $p$ is an odd prime and $p\\equiv2$ or $3\\pmod 5$, then $F_p\\equiv-1\\pmod p$; equivalently, $p\\mid(F_p+1)$.",
+    "proof_outline": [
+      "For every integer $n\\ge1$, the symbolic identity $$2^{n-1}F_n=\\sum_{\\substack{1\\le k\\le n\\\\k\\text{ odd}}}\\binom nk5^{(k-1)/2}$$ follows by expanding $((1+\\sqrt5)/2)^n-((1-\\sqrt5)/2)^n$; the Wolfram kernel independently simplified this identity to True.",
+      "Let $p$ be an odd prime with $p\\equiv2$ or $3\\pmod5$. For every integer $k$ with $1\\le k\\le p-1$, one has $p\\mid\\binom pk$. Reducing the identity modulo $p$ therefore leaves only its $k=p$ term and gives $2^{p-1}F_p\\equiv5^{(p-1)/2}\\pmod p$.",
+      "Fermat's little theorem gives $2^{p-1}\\equiv1\\pmod p$. Euler's criterion gives $5^{(p-1)/2}\\equiv\\left(\\frac5p\\right)\\pmod p$. Because $5\\equiv1\\pmod4$, quadratic reciprocity yields $\\left(\\frac5p\\right)=\\left(\\frac p5\\right)$.",
+      "The nonzero quadratic residues modulo $5$ are $1$ and $4$. Since $p\\equiv2$ or $3\\pmod5$, one has $\\left(\\frac p5\\right)=-1$. Consequently $F_p\\equiv-1\\pmod p$, proving $p\\mid(F_p+1)$.",
+      "This explicitly repairs the counterexample $p=37$: although $F_{37}=24{,}157{,}817=73\\cdot149\\cdot2221$ is composite, $F_{37}+1=37\\cdot652{,}914$. Hence the repaired conclusion holds at the first failure of the original conjecture."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "FullSimplify[Sum[Binomial[n, k] 5^((k - 1)/2), {k, 1, n, 2}] == 2^(n - 1) Fibonacci[n], Assumptions -> Element[n, Integers] && n >= 1]",
+        "result": "True",
+        "interpretation": "This symbolically verifies the universal binomial identity used in the proof."
+      },
+      {
+        "expression": "With[{ps = Select[Range[3, 10000], PrimeQ[#] && MemberQ[{2, 3}, Mod[#, 5]] &]}, {Length[ps], First[ps], Last[ps], And @@ (Mod[Fibonacci[#], #] == # - 1 & /@ ps), {Mod[Fibonacci[37], 37], Mod[Fibonacci[37] + 1, 37], FactorInteger[Fibonacci[37]]}}]",
+        "result": "{618, 3, 9973, True, {36, 0, {{73, 1}, {149, 1}, {2221, 1}}}}",
+        "interpretation": "An independent exact test verifies the repaired congruence for every eligible prime through $9973$ and confirms it at the original counterexample $p=37$."
+      },
+      {
+        "expression": "With[{n = 37}, {FullSimplify[Sum[Binomial[m, k] 5^((k - 1)/2), {k, 1, m, 2}] == 2^(m - 1) Fibonacci[m], Assumptions -> Element[m, Integers] && m >= 1], {PrimeQ[n], Mod[n, 5], Fibonacci[n], FactorInteger[Fibonacci[n]], Mod[Fibonacci[n] + 1, n], Quotient[Fibonacci[n] + 1, n]}}]",
+        "result": "{True, {True, 2, 24157817, {{73, 1}, {149, 1}, {2221, 1}}, 0, 652914}}",
+        "interpretation": "The certificate simultaneously verifies the symbolic identity and shows exactly how the repaired divisibility conclusion survives the first counterexample to primality."
+      }
+    ],
+    "certificate": {
+      "expression": "With[{n = 37}, {FullSimplify[Sum[Binomial[m, k] 5^((k - 1)/2), {k, 1, m, 2}] == 2^(m - 1) Fibonacci[m], Assumptions -> Element[m, Integers] && m >= 1], {PrimeQ[n], Mod[n, 5], Fibonacci[n], FactorInteger[Fibonacci[n]], Mod[Fibonacci[n] + 1, n], Quotient[Fibonacci[n] + 1, n]}}]",
+      "expected": "{True, {True, 2, 24157817, {{73, 1}, {149, 1}, {2221, 1}}, 0, 652914}}",
+      "actual": "{True, {True, 2, 24157817, {{73, 1}, {149, 1}, {2221, 1}}, 0, 652914}}",
+      "passed": true,
+      "engine": "local Wolfram kernel"
+    },
+    "metrics": {
+      "ai_tokens": 318341,
+      "wolfram_calls": 12
+    }
+  },
+  {
+    "id": "96ec456929a04655a661a44c3de02be9",
+    "archived_at": "2026-09-06T19:32:13-04:00",
+    "job_id": "7ab814171eb849e3b6b4f161cc8000cd",
+    "cycle": 2,
+    "status": "certified",
+    "termination": "certified",
+    "title": "A Prime Plus Twice a Square",
+    "original_conjecture": "Every odd composite integer $n\\ge 9$ can be written as $n=p+2k^2$, where $p$ is prime and $k$ is a positive integer.",
+    "object_definition": "For each odd composite integer $n\\ge 9$, consider whether there exist a prime $p$ and a positive integer $k$ such that $n=p+2k^2$.",
+    "plain_english_summary": "I studied whether every odd non-prime number can be assembled from a prime number and twice a square. All $1{,}831$ tested numbers fit, so I conjecture that every odd composite number does.",
+    "certified_theorem": "For every odd composite integer $n$ satisfying $9\\le n\\le5775$, there exist a prime $p$ and a positive integer $k$ such that $n=p+2k^2$. This range is sharp: $5777=53\\cdot109$ is odd and composite, but no prime $p$ and positive integer $k$ satisfy $5777=p+2k^2$.",
+    "proof_outline": [
+      "For every integer $n\\ge9$, the possible witnesses are exactly the integers $k$ satisfying $1\\le k\\le\\sqrt{(n-2)/2}$; outside this range, $n-2k^2<2$ cannot be prime.",
+      "There are exactly $2132$ odd composite integers in the interval $9\\le n\\le5777$.",
+      "Exact enumeration and primality testing over the complete admissible witness range finds $5777$ as the only failure among those $2132$ integers.",
+      "Consequently, all $2131$ smaller odd composites, equivalently every odd composite $n$ with $9\\le n\\le5775$, have the required representation.",
+      "The same certificate factors $5777$ as $53\\cdot109$ and verifies that its admissible witnesses are precisely $1\\le k\\le53$, none of which leaves a prime residual."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "FullSimplify[Reduce[Element[k, Integers] && k >= 1 && n - 2 k^2 >= 2, k, Reals], Assumptions -> Element[n, Integers] && n >= 9]",
+        "result": "Element[k, Integers] && Inequality[1, LessEqual, k, LessEqual, Sqrt[-2 + n]/Sqrt[2]]",
+        "interpretation": "Symbolically derives the exact admissible range $1\\le k\\le\\sqrt{(n-2)/2}$."
+      },
+      {
+        "expression": "With[{nums = Select[Range[9, 5777, 2], CompositeQ]}, {Length[nums], Last[nums], Select[nums, Function[n, NoneTrue[Range[1, Floor[Sqrt[(n - 2)/2]]], Function[k, PrimeQ[n - 2 k^2]]]]], FactorInteger[5777], Floor[Sqrt[(5777 - 2)/2]]}]",
+        "result": "{2132, 5777, {5777}, {{53, 1}, {109, 1}}, 53}",
+        "interpretation": "Independently verifies the complete finite classification: among all odd composites from $9$ through $5777$, the unique failure is $5777=53\\cdot109$, whose largest admissible witness is $k=53$."
+      }
+    ],
+    "certificate": {
+      "expression": "With[{nums = Select[Range[9, 5777, 2], CompositeQ]}, {Length[nums], Last[nums], Select[nums, Function[n, NoneTrue[Range[1, Floor[Sqrt[(n - 2)/2]]], Function[k, PrimeQ[n - 2 k^2]]]]], FactorInteger[5777], Floor[Sqrt[(5777 - 2)/2]]}]",
+      "expected": "{2132, 5777, {5777}, {{53, 1}, {109, 1}}, 53}",
+      "actual": "{2132, 5777, {5777}, {{53, 1}, {109, 1}}, 53}",
+      "passed": true,
+      "engine": "local Wolfram kernel"
+    },
+    "metrics": {
+      "ai_tokens": 405301,
+      "wolfram_calls": 12
+    }
+  },
+  {
+    "id": "233217bc33e24b69bf778dfca310ac60",
+    "archived_at": "2026-09-06T19:41:35-04:00",
+    "job_id": "7061ef6066ac45cdba0804417f444c2b",
+    "cycle": 1,
+    "status": "certified",
+    "termination": "certified",
+    "title": "A prime-generating cubic candidate",
+    "original_conjecture": "For every nonnegative integer $n$, the number $n^3-n+103$ is prime.",
+    "object_definition": "Define $P(n)=n^3-n+103$ for every nonnegative integer $n$.",
+    "plain_english_summary": "I studied the whole numbers produced by feeding nonnegative integers into the cubic rule $n^3-n+103$. The first twelve outputs are prime, suggesting the conjecture that every output is prime.",
+    "certified_theorem": "Define $P(n)=n^3-n+103$. For every integer $n\\ge 0$, $17\\mid P(n)$ if and only if $n\\equiv12\\pmod{17}$. Consequently, for every integer $k\\ge0$, $$P(17k+12)=17\\bigl(289k^3+612k^2+431k+107\\bigr)$$ is composite. In contrast, $P(n)$ is prime for every integer $n$ satisfying $0\\le n\\le11$.",
+    "proof_outline": [
+      "Exact primality testing certifies that $P(n)$ is prime for every integer $n$ with $0\\le n\\le11$.",
+      "Checking one complete residue system modulo $17$ shows that $P(r)\\equiv0\\pmod{17}$ only for $r=12$. Since polynomial congruences depend only on the residue of their input, this proves $17\\mid P(n)$ if and only if $n\\equiv12\\pmod{17}$.",
+      "Writing $n=17k+12$ gives the symbolic identity $P(n)=17(289k^3+612k^2+431k+107)$.",
+      "For every integer $k\\ge0$, the second factor is at least $107>1$; hence every value in this residue class is composite. In particular, this explicitly accounts for the counterexample $P(12)=17\\cdot107=1819$.",
+      "Thus the original twelve-term prime run is exact, while the residue class $n\\equiv12\\pmod{17}$ supplies infinitely many composite values."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "Factor[Expand[(17 k + 12)^3 - (17 k + 12) + 103], Modulus -> 0]",
+        "result": "17*(107 + 431*k + 612*k^2 + 289*k^3)",
+        "interpretation": "Symbolic expansion and factorization expose the factor $17$ throughout the residue class $n\\equiv12\\pmod{17}$."
+      },
+      {
+        "expression": "{And @@ Table[PrimeQ[n^3 - n + 103], {n, 0, 11}], FactorInteger[12^3 - 12 + 103], Select[Range[0, 16], Mod[#^3 - # + 103, 17] == 0 &], FullSimplify[Expand[(17 k + 12)^3 - (17 k + 12) + 103] == 17 (289 k^3 + 612 k^2 + 431 k + 107), Assumptions -> Element[k, Integers] && k >= 0], FullSimplify[289 k^3 + 612 k^2 + 431 k + 107 > 1, Assumptions -> Element[k, Integers] && k >= 0]}",
+        "result": "{True, {{17, 1}, {107, 1}}, {12}, True, True}",
+        "interpretation": "This independently verifies the initial prime interval, the factorization of the counterexample, uniqueness of the obstructing residue, the general factorization identity, and positivity of its cofactor."
+      }
+    ],
+    "certificate": {
+      "expression": "{And @@ Table[PrimeQ[n^3 - n + 103], {n, 0, 11}], FactorInteger[12^3 - 12 + 103], Select[Range[0, 16], Mod[#^3 - # + 103, 17] == 0 &], FullSimplify[Expand[(17 k + 12)^3 - (17 k + 12) + 103] == 17 (289 k^3 + 612 k^2 + 431 k + 107), Assumptions -> Element[k, Integers] && k >= 0], FullSimplify[289 k^3 + 612 k^2 + 431 k + 107 > 1, Assumptions -> Element[k, Integers] && k >= 0]}",
+      "expected": "{True, {{17, 1}, {107, 1}}, {12}, True, True}",
+      "actual": "{True, {{17, 1}, {107, 1}}, {12}, True, True}",
+      "passed": true,
+      "engine": "local Wolfram kernel"
+    },
+    "metrics": {
+      "ai_tokens": 391816,
+      "wolfram_calls": 17
+    }
+  },
+  {
+    "id": "11d0e60ac2174a15950bc42cf8048ab3",
+    "archived_at": "2026-09-06T19:49:31-04:00",
+    "job_id": "7061ef6066ac45cdba0804417f444c2b",
+    "cycle": 2,
+    "status": "certified",
+    "termination": "certified",
+    "title": "A ten-term parity barrier for partition numbers",
+    "original_conjecture": "For every integer $n\\ge0$, the ten consecutive partition numbers $p(n),p(n+1),\\ldots,p(n+9)$ include at least one even number and at least one odd number.",
+    "object_definition": "Let $p(n)$ denote the number of unordered ways to express the nonnegative integer $n$ as a sum of positive integers, with $p(0)=1$. I studied consecutive runs in the parity sequence of $p(n)$.",
+    "plain_english_summary": "I studied the number of unordered ways to break each whole number into positive pieces. Every tested stretch of ten counts contained both an even and an odd value, and I conjecture that this always happens.",
+    "certified_theorem": "Let $p(n)$ be the partition function with $p(0)=1$. For every integer $n$ satisfying $0\\le n\\le2361$, the ten residues $p(n),p(n+1),\\ldots,p(n+9)\\pmod 2$ include both $0$ and $1$. This range is sharp: $p(k)$ is odd for every integer $k$ with $2362\\le k\\le2371$, while $p(2361)$ and $p(2372)$ are even. Consequently, $n=2362$ is the least counterexample to the original conjecture.",
+    "proof_outline": [
+      "Euler’s identity $\\prod_{m\\ge1}(1-x^m)=\\sum_{j\\in\\mathbb Z}(-1)^j x^{j(3j-1)/2}$ yields the generalized-pentagonal recurrence for $p(n)$.",
+      "Modulo $2$, the recurrence signs disappear. Starting from $p(0)\\equiv1\\pmod2$, it therefore determines every residue $p(n)\\pmod2$ exactly using only earlier residues.",
+      "Exact recurrence evaluation through $n=2372$ verifies that every integer start $0\\le n\\le2361$ gives a ten-term block containing both residues.",
+      "The same evaluation gives the boundary pattern $(p(2361),\\ldots,p(2372))\\equiv(0,1,1,1,1,1,1,1,1,1,1,0)\\pmod2$, explicitly incorporating and repairing the counterexample at $n=2362$."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "Expand[Normal[Series[Product[1 - x^k, {k, 1, 30}], {x, 0, 30}]]]",
+        "result": "1 - x - x^2 + x^5 + x^7 - x^12 - x^15 + x^22 + x^26",
+        "interpretation": "This symbolic expansion reproduces Euler’s generalized-pentagonal exponents and alternating coefficients through degree $30$."
+      },
+      {
+        "expression": "With[{bits = Mod[Table[PartitionsP[k], {k, 0, 2372}], 2]}, <|\"FirstConstantTenStart\" -> SelectFirst[Range[0, 2363], SameQ @@ bits[[# + 1 ;; # + 10]] &], \"Run2361Through2372\" -> bits[[2362 ;; 2373]], \"AllEarlierTenMixed\" -> AllTrue[Range[0, 2361], Length[Union[bits[[# + 1 ;; # + 10]]]] == 2 &]|>]",
+        "result": "<|\"FirstConstantTenStart\" -> 2362, \"Run2361Through2372\" -> {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, \"AllEarlierTenMixed\" -> True|>",
+        "interpretation": "Direct evaluation of the built-in partition function verifies the repaired finite theorem and its sharp boundary."
+      },
+      {
+        "expression": "Module[{p = ConstantArray[0, 2373], n, k, g1, g2, s, mixed}, p[[1]] = 1; For[n = 1, n <= 2372, n++, s = 0; k = 1; While[(g1 = k (3 k - 1)/2) <= n, s += p[[n - g1 + 1]]; g2 = k (3 k + 1)/2; If[g2 <= n, s += p[[n - g2 + 1]]]; k++]; p[[n + 1]] = Mod[s, 2]]; mixed[j_] := Sort[DeleteDuplicates[p[[j + 1 ;; j + 10]]]] == {0, 1}; <|\"AllStarts0Through2361Mixed\" -> AllTrue[Range[0, 2361], mixed], \"FirstConstantTenStart\" -> SelectFirst[Range[0, 2362], Not[mixed[#]] &], \"Bits2361Through2372\" -> p[[2362 ;; 2373]]|>]",
+        "result": "<|\"AllStarts0Through2361Mixed\" -> True, \"FirstConstantTenStart\" -> 2362, \"Bits2361Through2372\" -> {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}|>",
+        "interpretation": "An independent exact computation using only the generalized-pentagonal recurrence certifies every quantified case and the least counterexample."
+      }
+    ],
+    "certificate": {
+      "expression": "Module[{p = ConstantArray[0, 2373], n, k, g1, g2, s, mixed}, p[[1]] = 1; For[n = 1, n <= 2372, n++, s = 0; k = 1; While[(g1 = k (3 k - 1)/2) <= n, s += p[[n - g1 + 1]]; g2 = k (3 k + 1)/2; If[g2 <= n, s += p[[n - g2 + 1]]]; k++]; p[[n + 1]] = Mod[s, 2]]; mixed[j_] := Sort[DeleteDuplicates[p[[j + 1 ;; j + 10]]]] == {0, 1}; <|\"AllStarts0Through2361Mixed\" -> AllTrue[Range[0, 2361], mixed], \"FirstConstantTenStart\" -> SelectFirst[Range[0, 2362], Not[mixed[#]] &], \"Bits2361Through2372\" -> p[[2362 ;; 2373]]|>]",
+      "expected": "<|\"AllStarts0Through2361Mixed\" -> True, \"FirstConstantTenStart\" -> 2362, \"Bits2361Through2372\" -> {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}|>",
+      "actual": "<|\"AllStarts0Through2361Mixed\" -> True, \"FirstConstantTenStart\" -> 2362, \"Bits2361Through2372\" -> {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}|>",
+      "passed": true,
+      "engine": "local Wolfram kernel"
+    },
+    "metrics": {
+      "ai_tokens": 303989,
+      "wolfram_calls": 11
+    }
+  },
+  {
+    "id": "361dd425e7c446eb86e0acef642b6033",
+    "archived_at": "2026-09-06T20:16:07-04:00",
+    "job_id": "e678f45de19846e58a4da673f8585236",
+    "cycle": 1,
+    "status": "certified",
+    "termination": "certified",
+    "title": "A Fibonacci Congruence as a Primality Test",
+    "original_conjecture": "Conjecture (not proved): If $n>1$ is odd, $\\gcd(n,5)=1$, and $n\\mid F_n-\\left(\\frac{5}{n}\\right)$, then $n$ is prime.",
+    "object_definition": "Let $F_0=0$, $F_1=1$, and $F_{k+1}=F_k+F_{k-1}$. Study odd integers $n>1$ with $\\gcd(n,5)=1$ that satisfy $n\\mid F_n-\\left(\\frac{5}{n}\\right)$, where $\\left(\\frac{5}{n}\\right)$ is the Jacobi symbol.",
+    "plain_english_summary": "I studied a divisibility test that combines Fibonacci numbers with a simple sign attached to each odd number. Every tested number that passed was prime, so I conjecture that no composite number can pass.",
+    "certified_theorem": "For every integer $n$ satisfying $1<n\\le 4181$, $n$ odd, and $\\gcd(n,5)=1$, one has $n\\mid F_n-\\left(\\frac{5}{n}\\right)$ if and only if either $n$ is prime or $n=4181$. Consequently, the original implication is valid throughout $1<n<4181$, while $4181=37\\cdot113$ is the unique composite exception at or below $4181$.",
+    "proof_outline": [
+      "Wolfram Language symbolically reduced the Fibonacci addition formula $F_{m+n}=F_{m-1}F_n+F_mF_{n+1}$ to zero under the hypotheses $m\\ge1$ and $n\\ge0$. This identity supports exact fast-doubling computation.",
+      "An independent modular fast-doubling implementation enumerated every admissible odd integer through $4181$ and found that the passing set consists precisely of the admissible primes together with $4181$.",
+      "The certificate independently uses exact built-in Fibonacci integers to verify the biconditional for every integer in the stated finite domain.",
+      "It also certifies that the only passing composite is $4181$, that $4181=37\\cdot113$, that $\\left(\\frac{5}{4181}\\right)=1$, and that $F_{4181}-1\\equiv0\\pmod{4181}$."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "FullSimplify[Fibonacci[m + n] - Fibonacci[m - 1] Fibonacci[n] - Fibonacci[m] Fibonacci[n + 1], Assumptions -> Element[{m, n}, Integers] && m >= 1 && n >= 0]",
+        "result": "0",
+        "interpretation": "This symbolically verifies the Fibonacci addition identity used by modular fast doubling."
+      },
+      {
+        "expression": "ClearAll[fd, fibMod]; fd[0, m_] := {0, 1}; fd[k_Integer?Positive, m_Integer?Positive] := fd[k, m] = Module[{a, b, c, d, q = Quotient[k, 2]}, {a, b} = fd[q, m]; c = Mod[a (2 b - a), m]; d = Mod[a^2 + b^2, m]; If[EvenQ[k], {c, d}, {d, Mod[c + d, m]}]]; fibMod[k_Integer?NonNegative, m_Integer?Positive] := First[fd[k, m]]; pass = Select[Range[3, 4181, 2], CoprimeQ[#, 5] && fibMod[#, #] == Mod[JacobiSymbol[5, #], #] &]; primes = Select[Range[3, 4181, 2], CoprimeQ[#, 5] && PrimeQ[#] &]; {pass === Join[primes, {4181}], Select[pass, CompositeQ], FactorInteger[4181], JacobiSymbol[5, 4181], fibMod[4181, 4181]}",
+        "result": "{True, {4181}, {{37, 1}, {113, 1}}, 1, 1}",
+        "interpretation": "Independent fast-doubling arithmetic verifies that the admissible passing values through $4181$ are exactly the primes and $4181$; moreover $F_{4181}\\equiv1\\pmod{4181}$."
+      },
+      {
+        "expression": "With[{d = Select[Range[3, 4181, 2], CoprimeQ[#, 5] &]}, {And @@ Table[(Mod[Fibonacci[n] - JacobiSymbol[5, n], n] == 0) == (PrimeQ[n] || n == 4181), {n, d}], Select[d, CompositeQ[#] && Mod[Fibonacci[#] - JacobiSymbol[5, #], #] == 0 &], FactorInteger[4181], JacobiSymbol[5, 4181], Mod[Fibonacci[4181] - JacobiSymbol[5, 4181], 4181]}]",
+        "result": "{True, {4181}, {{37, 1}, {113, 1}}, 1, 0}",
+        "interpretation": "The exact exhaustive certificate establishes the repaired theorem and explicitly confirms the counterexample's factorization and congruence."
+      }
+    ],
+    "certificate": {
+      "expression": "With[{d = Select[Range[3, 4181, 2], CoprimeQ[#, 5] &]}, {And @@ Table[(Mod[Fibonacci[n] - JacobiSymbol[5, n], n] == 0) == (PrimeQ[n] || n == 4181), {n, d}], Select[d, CompositeQ[#] && Mod[Fibonacci[#] - JacobiSymbol[5, #], #] == 0 &], FactorInteger[4181], JacobiSymbol[5, 4181], Mod[Fibonacci[4181] - JacobiSymbol[5, 4181], 4181]}]",
+      "expected": "{True, {4181}, {{37, 1}, {113, 1}}, 1, 0}",
+      "actual": "{True, {4181}, {{37, 1}, {113, 1}}, 1, 0}",
+      "passed": true,
+      "engine": "local Wolfram kernel"
+    },
+    "metrics": {
+      "ai_tokens": 398999,
+      "wolfram_calls": 13
+    }
+  },
+  {
+    "id": "149e4f3a031f409d9f831ba82e8497c1",
+    "archived_at": "2026-09-06T20:33:12-04:00",
+    "job_id": "c9154ff2fa8b4da59063ac8a3de94a66",
+    "cycle": 1,
+    "status": "certified",
+    "termination": "certified",
+    "title": "The Missing $353$ Conjecture",
+    "original_conjecture": "For every integer $n\\ge 0$, $$p(n)\\not\\equiv353\\pmod{392}.$$",
+    "object_definition": "Let $p(n)$ denote the number of unordered partitions of the nonnegative integer $n$, with $p(0)=1$. Study the residues of $p(n)$ modulo $392$.",
+    "plain_english_summary": "I studied the remainders obtained by dividing integer-partition counts by $392$. Every possible remainder appeared in the first $5001$ cases except $353$, which I conjecture never appears.",
+    "certified_theorem": "Let $p(n)$ be the number of unordered partitions of the nonnegative integer $n$, with $p(0)=1$. Then, for every integer $n$ satisfying $0\\le n\\le6169$, one has $p(n)\\not\\equiv353\\pmod{392}$, while $p(6170)\\equiv353\\pmod{392}$. Equivalently, $6170$ is the least nonnegative integer $n$ for which $p(n)\\equiv353\\pmod{392}$.",
+    "proof_outline": [
+      "Euler’s generalized-pentagonal recurrence computes each $p(n)$ from earlier partition numbers using exact integer arithmetic. Reducing after each recurrence step modulo $392$ therefore preserves the exact residue by induction.",
+      "The certificate computes all residues for $0\\le n\\le6170$ and returns $\\{6170\\}$ as the complete set of indices in that range satisfying $p(n)\\equiv353\\pmod{392}$. It separately records that the residue at $n=6170$ is $353$ and that no such residue occurs for $0\\le n\\le6169$.",
+      "An independent built-in evaluation gives $p(6170)\\equiv353\\pmod{392}$, including the consistent component congruences $p(6170)\\equiv1\\pmod 8$ and $p(6170)\\equiv10\\pmod{49}$.",
+      "Since $392=8\\cdot49$ with coprime factors, the target residue $353$ is uniquely characterized by the component residues $1$ modulo $8$ and $10$ modulo $49$."
+    ],
+    "wolfram_checks": [
+      {
+        "expression": "{FactorInteger[392], Mod[353, {8, 49}], ChineseRemainder[{1, 10}, {8, 49}]}",
+        "result": "{{{2, 3}, {7, 2}}, {1, 10}, 353}",
+        "interpretation": "This symbolically factors $392=2^3\\cdot7^2=8\\cdot49$ and verifies that the component residues $1$ modulo $8$ and $10$ modulo $49$ reconstruct $353$ modulo $392$."
+      },
+      {
+        "expression": "{Mod[PartitionsP[6170], 392], Mod[PartitionsP[6170], 8], Mod[PartitionsP[6170], 49]}",
+        "result": "{353, 1, 10}",
+        "interpretation": "The built-in exact partition function independently verifies the repaired theorem’s endpoint equality and its two coprime component congruences."
+      },
+      {
+        "expression": "Module[{limit = 6170, p, n, k, g1, g2, s, sign, hits}, p = ConstantArray[0, limit + 1]; p[[1]] = 1; For[n = 1, n <= limit, n++, s = 0; k = 1; While[(g1 = k (3 k - 1)/2) <= n, sign = If[OddQ[k], 1, -1]; s += sign p[[n - g1 + 1]]; g2 = k (3 k + 1)/2; If[g2 <= n, s += sign p[[n - g2 + 1]]]; k++]; p[[n + 1]] = Mod[s, 392]]; hits = Select[Range[0, limit], p[[# + 1]] == 353 &]; {hits, p[[6171]], FreeQ[p[[1 ;; 6170]], 353]}]",
+        "result": "{{6170}, 353, True}",
+        "interpretation": "The exact generalized-pentagonal recurrence certifies that $6170$ is the unique hit through $6170$ and hence the least nonnegative hit."
+      }
+    ],
+    "certificate": {
+      "expression": "Module[{limit = 6170, p, n, k, g1, g2, s, sign, hits}, p = ConstantArray[0, limit + 1]; p[[1]] = 1; For[n = 1, n <= limit, n++, s = 0; k = 1; While[(g1 = k (3 k - 1)/2) <= n, sign = If[OddQ[k], 1, -1]; s += sign p[[n - g1 + 1]]; g2 = k (3 k + 1)/2; If[g2 <= n, s += sign p[[n - g2 + 1]]]; k++]; p[[n + 1]] = Mod[s, 392]]; hits = Select[Range[0, limit], p[[# + 1]] == 353 &]; {hits, p[[6171]], FreeQ[p[[1 ;; 6170]], 353]}]",
+      "expected": "{{6170}, 353, True}",
+      "actual": "{{6170}, 353, True}",
+      "passed": true,
+      "engine": "local Wolfram kernel"
+    },
+    "metrics": {
+      "ai_tokens": 546704,
+      "wolfram_calls": 17
+    }
   }
 ]

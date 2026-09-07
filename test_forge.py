@@ -7,10 +7,18 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from app import archive_result, read_archive
-from forge import forge_conjecture, run_codex_agent
+from forge import (
+    CODEX_AGENT_TIMEOUT_SECONDS,
+    WOLFRAM_MCP_CONFIG,
+    WOLFRAM_MCP_SERVER,
+    WOLFRAM_MCP_TOOL,
+    forge_conjecture,
+    run_codex_agent,
+)
+from wolfram_kernel import evaluate_wolfram
 
 
 class FakeAgents:
@@ -91,6 +99,19 @@ class FakeAgents:
 
 
 class ForgeTest(unittest.TestCase):
+    def test_agent_timeout_allows_official_mcp_startup_and_heavy_math(self):
+        self.assertEqual(CODEX_AGENT_TIMEOUT_SECONDS, 420)
+
+    def test_kernel_referee_uses_a_fresh_wolframscript_process(self):
+        completed = Mock(returncode=0, stdout="4\n", stderr="")
+        with patch("wolfram_kernel.subprocess.run", return_value=completed) as run:
+            self.assertEqual(evaluate_wolfram("2+2"), "4")
+        command = run.call_args.args[0]
+        environment = run.call_args.kwargs["env"]
+        self.assertEqual(command[0], "/usr/local/bin/wolframscript")
+        self.assertEqual(environment["AIMERICAN_CERTIFICATE_EXPRESSION"], "2+2")
+        self.assertNotIn("CONJECTURE_FORGE_EXPRESSION", environment)
+
     def test_codex_usage_is_counted_without_double_counting_breakdowns(self):
         events = []
         commands = []
@@ -122,9 +143,11 @@ class ForgeTest(unittest.TestCase):
                     '{"type":"item.completed","item":{"type":"reasoning",'
                     '"text":"Checking the pattern."}}\n'
                     '{"type":"item.completed","item":{"type":"mcp_tool_call",'
-                    '"server":"local_mathematica","tool":"evaluate_wolfram",'
-                    '"status":"completed","arguments":{"expression":"2+2"},'
-                    '"result":"4"}}\n'
+                    '"server":"WolframLanguage","tool":"WolframLanguageEvaluator",'
+                    '"status":"completed","arguments":{"code":"2+2"},'
+                    '"result":{"content":[{"type":"text","text":"Out[1]= 4"},'
+                    '{"type":"text","text":"<system-reminder>session metadata</system-reminder>"}],'
+                    '"structured_content":null}}}\n'
                     '{"type":"turn.completed","usage":'
                     '{"input_tokens":1000,"cached_input_tokens":800,'
                     '"cache_write_input_tokens":300,"output_tokens":200,'
@@ -140,6 +163,13 @@ class ForgeTest(unittest.TestCase):
         self.assertEqual(report["ai_tokens"], 1200)
         self.assertIn("gpt-5.6-sol", commands[0])
         self.assertIn('model_reasoning_effort="high"', commands[0])
+        for override in WOLFRAM_MCP_CONFIG:
+            self.assertIn(override, commands[0])
+        self.assertIn(
+            'mcp_servers.WolframLanguage.enabled_tools=["WolframLanguageEvaluator"]',
+            commands[0],
+        )
+        self.assertNotIn("local_mathematica", commands[0])
         self.assertEqual(
             report["token_usage"],
             {
@@ -157,7 +187,7 @@ class ForgeTest(unittest.TestCase):
         self.assertEqual(prompt_event["model"], "gpt-5.6-sol")
         wolfram_event = next(event for event in events if event["type"] == "wolfram_call")
         self.assertEqual(wolfram_event["expression"], "2+2")
-        self.assertEqual(wolfram_event["result"], "4")
+        self.assertEqual(wolfram_event["result"], "Out[1]= 4")
         outputs = [event for event in events if event["type"] == "codex_output"]
         self.assertEqual(outputs[0]["message"], "Checking the pattern.")
         self.assertTrue(any(event["kind"] == "structured" for event in outputs))
@@ -189,6 +219,18 @@ class ForgeTest(unittest.TestCase):
         self.assertEqual(fake.roles, ["explorer", "falsifier", "prover", "falsifier"])
         self.assertTrue(report["seed"]["autonomous"])
         self.assertEqual(report["seed"]["topic"], "Euler polynomial")
+
+    def test_all_agent_prompts_require_only_the_official_evaluator(self):
+        fake = FakeAgents()
+        forge_conjecture("Explore n^2+n+41", agent_runner=fake, kernel=lambda x: "True")
+        self.assertEqual(WOLFRAM_MCP_SERVER, "WolframLanguage")
+        self.assertEqual(WOLFRAM_MCP_TOOL, "WolframLanguageEvaluator")
+        for _, prompt in fake.prompts:
+            self.assertIn(
+                "WolframLanguage.WolframLanguageEvaluator", prompt
+            )
+            self.assertIn("Do not use shell commands", prompt)
+            self.assertNotIn("local_mathematica", prompt)
 
     def test_prover_is_told_to_stay_within_the_explorers_object(self):
         fake = FakeAgents()

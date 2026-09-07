@@ -7,9 +7,9 @@
 [View the project on Sundai Club](https://www.sundai.club/projects/3d939e29-6781-45d7-8e67-6f0172b9473c)
 
 AImerican Mathematical Society is a local, continuously running society of AI
-mathematicians. Codex agents hallucinate conjectures, use exact Wolfram Language
-computations to explore and attack them, repair false statements, and ask an
-independent local Wolfram Engine to check the final certificate.
+mathematicians. Codex agents hallucinate conjectures, use the official Wolfram
+Local MCP to explore and attack them, repair false statements, and ask an
+independent fresh Wolfram kernel process to check the final certificate.
 
 The browser UI shows the Explorer, Falsifier, Prover, and Kernel Referee in
 real time, including Codex prompts and outputs, AI-token usage, Wolfram MCP calls,
@@ -33,7 +33,10 @@ Explorer begins a new conjecture.
 Codex agents use JSON Schema-constrained output. The default agent model is
 `gpt-5.6-sol` with `high` reasoning. The harness counts exact
 `input_tokens + output_tokens` reported by Codex and separately counts successful
-Wolfram MCP calls.
+Wolfram MCP calls. Explorer, Falsifier, and Prover receive only the official
+`WolframLanguageEvaluator` from the `WolframLanguage` MCP server. The Kernel
+Referee does not share that MCP session: Python launches a fresh `wolframscript`
+process for the final check.
 
 ## Prerequisites
 
@@ -43,13 +46,12 @@ Wolfram MCP calls.
   there is no `pip install` step.
 - **Codex desktop app and CLI**, installed and signed in. By default the harness
   expects `/Applications/Codex.app/Contents/Resources/codex`.
-- **An installed and activated local Wolfram Engine**, supplied by Wolfram,
-  Wolfram|One, or Mathematica, plus `wolframscript`. Launch the Wolfram product
-  once and complete licensing before running the project. The default paths are
-  `/usr/local/bin/wolframscript` and
-  `/Applications/Wolfram.app/Contents/MacOS/WolframKernel`.
-- **The local MCP registration** shown below. The project supplies its own stdio
-  MCP wrapper in `server.py`; agents call its `evaluate_wolfram` tool.
+- **An installed and activated Wolfram product with the official AgentTools
+  local MCP support**, plus `wolframscript`. Launch the Wolfram product once and
+  complete licensing before running the project. The defaults target
+  `/Applications/Wolfram.app/Contents/MacOS/wolfram`,
+  `/Applications/Wolfram.app/Contents/MacOS/WolframKernel`, and
+  `/usr/local/bin/wolframscript`.
 
 No OpenAI API key or separate web framework is required. Authentication is
 provided by the signed-in Codex installation.
@@ -62,6 +64,7 @@ renders locally without a CDN or a separate frontend installation.
 ```bash
 python3 --version
 /Applications/Codex.app/Contents/Resources/codex --version
+/Applications/Wolfram.app/Contents/MacOS/wolfram -version
 /usr/local/bin/wolframscript \
   -l /Applications/Wolfram.app/Contents/MacOS/WolframKernel \
   -code '2 + 2'
@@ -70,26 +73,31 @@ python3 --version
 If your executables live elsewhere, use the environment variables documented
 under **Configuration**.
 
-## 2. Register the local Wolfram MCP server
+## 2. Official Wolfram MCP setup
 
-Run this once, using the actual absolute path to your checkout:
+No global Codex MCP registration is needed. For every Explorer, Falsifier, and
+Prover invocation, `forge.py` injects the official Wolfram server configuration
+over stdio and restricts it with:
 
-```bash
-/Applications/Codex.app/Contents/Resources/codex mcp add local_mathematica \
-  --env WOLFRAMSCRIPT=/usr/local/bin/wolframscript \
-  --env WOLFRAM_KERNEL=/Applications/Wolfram.app/Contents/MacOS/WolframKernel \
-  -- /usr/bin/python3 \
-  /Users/vyahhi/projects/sundai/aimerican-mathematical-society/server.py
+```toml
+[mcp_servers.WolframLanguage]
+command = "/Applications/Wolfram.app/Contents/MacOS/wolfram"
+args = ["-run", "PacletSymbol[\"Wolfram/AgentTools\",\"Wolfram`AgentTools`StartMCPServer\"][]", "-noinit", "-noprompt"]
+enabled_tools = ["WolframLanguageEvaluator"]
+required = true
+
+[mcp_servers.WolframLanguage.env]
+MCP_SERVER_NAME = "WolframLanguage"
 ```
 
-Verify the registration:
+The configuration is supplied as per-process Codex overrides, so it does not
+write to `~/.codex/config.toml`. The prompts also forbid filesystem, process,
+environment, network, and notebook operations. This reduces the exposed tool
+surface but is not a sandbox: `WolframLanguageEvaluator` can execute Wolfram
+Language code, so run this project only in a trusted local environment.
 
-```bash
-/Applications/Codex.app/Contents/Resources/codex mcp get local_mathematica
-```
-
-The expected transport is `stdio`, and its configured argument should end in
-`aimerican-mathematical-society/server.py`.
+See Wolfram's [official Wolfram MCP Local documentation](https://www.wolfram.com/artificial-intelligence/mcp/local/wolfram-mcp-local/)
+and OpenAI's [official MCP documentation](https://learn.chatgpt.com/docs/extend/mcp).
 
 ## 3. Run the web app
 
@@ -149,37 +157,35 @@ tokens. For a live integration check, run the web app and launch one session.
 | `CODEX_BIN` | `/Applications/Codex.app/Contents/Resources/codex` | Codex CLI executable |
 | `CONJECTURE_CODEX_MODEL` | `gpt-5.6-sol` | Agent model |
 | `CONJECTURE_CODEX_REASONING` | `high` | Codex reasoning effort |
+| `CONJECTURE_CODEX_TIMEOUT_SECONDS` | `420` | Maximum wall time for one Codex role, including official MCP startup and calls |
+| `WOLFRAM_MCP_COMMAND` | `/Applications/Wolfram.app/Contents/MacOS/wolfram` | Official Wolfram MCP launcher used by Codex agents |
 | `WOLFRAMSCRIPT` | `/usr/local/bin/wolframscript` | Wolfram command-line launcher |
-| `WOLFRAM_KERNEL` | `/Applications/Wolfram.app/Contents/MacOS/WolframKernel` | Local Wolfram Engine kernel |
+| `WOLFRAM_KERNEL` | `/Applications/Wolfram.app/Contents/MacOS/WolframKernel` | Fresh Kernel Referee process |
 
 Example:
 
 ```bash
 CODEX_BIN=/custom/path/codex \
+WOLFRAM_MCP_COMMAND=/custom/path/wolfram \
 WOLFRAMSCRIPT=/custom/path/wolframscript \
 WOLFRAM_KERNEL=/custom/path/WolframKernel \
 python3 app.py
 ```
 
-If the Wolfram paths change after MCP registration, remove and re-add the MCP
-entry so the server receives the new environment values:
-
-```bash
-/Applications/Codex.app/Contents/Resources/codex mcp remove local_mathematica
-```
-
-Then repeat the registration command above.
+The official MCP path is read for every agent invocation, so there is no global
+registration to update.
 
 ## Project layout
 
 ```text
 app.py                 Local HTTP server and continuous-job manager
 forge.py               Codex multi-agent harness and repair loop
-server.py              Local Wolfram MCP stdio server
+wolfram_kernel.py      Independent fresh-process Kernel Referee evaluator
 schemas/               Structured-output schemas for each agent
 static/                Browser UI, styles, favicon, and hero artwork
 test_forge.py           Unit tests
 demo-result.json        Example completed research report
+TODO.md                 Roadmap toward cumulative mathematical research
 ```
 
 ## Troubleshooting
@@ -191,8 +197,8 @@ The local Python server is not running or restarted during a session. Start
 
 ### `Codex ... failed`
 
-Verify that Codex is installed, signed in, and available at `CODEX_BIN`. Then
-run `codex mcp get local_mathematica` and confirm the MCP server path is current.
+Verify that Codex is installed, signed in, and available at `CODEX_BIN`. Also
+verify that `WOLFRAM_MCP_COMMAND` launches your installed Wolfram product.
 
 ### Missing or failed Wolfram calls
 
@@ -203,12 +209,12 @@ For Wolfram Engine, activation can also be started interactively with:
 /usr/local/bin/wolframscript -activate
 ```
 
-Then check `WOLFRAMSCRIPT` and `WOLFRAM_KERNEL` and test through the same wrapper
-used by the MCP server:
+Then check `WOLFRAMSCRIPT` and `WOLFRAM_KERNEL` and test the independent Kernel
+Referee path:
 
 ```bash
 cd /Users/vyahhi/projects/sundai/aimerican-mathematical-society
-python3 -c 'from server import evaluate_wolfram; print(evaluate_wolfram("FactorInteger[1681]"))'
+python3 -c 'from wolfram_kernel import evaluate_wolfram; print(evaluate_wolfram("FactorInteger[1681]"))'
 ```
 
 Expected output:
@@ -238,8 +244,10 @@ Stop that process before starting another copy of the app.
 
 ## Local-use note
 
-The app binds only to `127.0.0.1`. Its Wolfram server evaluates Wolfram Language
-expressions produced by the agents, so run it only in a trusted local environment.
+The app binds only to `127.0.0.1`. The official Wolfram evaluator executes
+Wolfram Language expressions produced by the agents, so run it only in a
+trusted local environment.
 
 The Codex harness follows OpenAI's non-interactive structured-output workflow.
-The computation layer uses a local Wolfram Engine through an MCP stdio server.
+Agent computation uses the official Wolfram Local MCP; certificate evaluation
+uses a separate fresh `wolframscript` process.

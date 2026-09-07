@@ -31,13 +31,14 @@ function archiveTokenCount(record){
   return calls*24000+20000+(salt*97)%30000;
 }
 
-function recordRow(record){
+function recordRow(record,number){
   const row=document.createElement("tr");
+  const index=document.createElement("td");index.append(textNode("span","conjecture-number",String(number)));
   const date=document.createElement("td");date.append(textNode("div","date",new Date(record.archived_at).toLocaleString()));
   const original=document.createElement("td");const conjecture=textNode("div","conjecture","");const statement=textNode("div","conjecture-statement","");renderMath(statement,[record.object_definition||"Definition was not recorded.",record.original_conjecture].filter(Boolean).join(" "));conjecture.append(statement);if(record.plain_english_summary){const divider=document.createElement("hr");divider.className="conjecture-divider";const explanation=textNode("div","conjecture-explanation","");renderMath(explanation,record.plain_english_summary);conjecture.append(divider,explanation);}original.append(conjecture);
   const proof=document.createElement("td");const theorem=textNode("div","theorem","");renderMath(theorem,record.certified_theorem);const details=document.createElement("details");details.append(textNode("summary","","Proof outline"));const list=document.createElement("ol");(record.proof_outline||[]).forEach(step=>{const item=document.createElement("li");renderMath(item,step);list.append(item);});details.append(list);proof.append(theorem,details);
   const check=document.createElement("td");const certified=record.status==="certified"||record.certificate?.passed;check.append(textNode("span",`badge${certified?"":" failed"}`,certified?"CERTIFIED":"NOT CERTIFIED"),textNode("span","metrics",`${archiveTokenCount(record).toLocaleString()} AI tokens (Sol high)\n${record.metrics?.wolfram_calls||0} Wolfram MCP calls`));const certificate=document.createElement("details");certificate.append(textNode("summary","","Wolfram certificate"),textNode("div","certificate-code",`${record.certificate?.expression||""}\n→ ${record.certificate?.actual||""}`));check.append(certificate);
-  row.append(date,original,proof,check);return row;
+  row.append(index,date,original,proof,check);return row;
 }
 
 let archiveSignature="";
@@ -46,7 +47,7 @@ let archiveLoading=false;
 async function loadArchive(){
   if(archiveLoading)return;
   archiveLoading=true;
-  try{const response=await fetch("/api/archive",{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.error||"Could not load archive");const records=data.records||[];const signature=records.map(record=>record.id).join("|");$("archive-count").textContent=`${records.length} ${records.length===1?"conjecture":"conjectures"}`;$("archive-error").classList.add("hidden");if(signature===archiveSignature)return;archiveSignature=signature;$("empty").classList.toggle("hidden",records.length>0);$("archive-table").classList.toggle("hidden",records.length===0);$("archive-body").replaceChildren(...records.map(recordRow));}catch(error){$("archive-error").textContent=error.message;$("archive-error").classList.remove("hidden");$("archive-count").textContent="Archive unavailable";}finally{archiveLoading=false;}
+  try{const response=await fetch("/api/archive",{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.error||"Could not load archive");const records=data.records||[];const signature=records.map(record=>record.id).join("|");$("archive-count").textContent=`${records.length} ${records.length===1?"conjecture":"conjectures"}`;$("archive-error").classList.add("hidden");if(signature===archiveSignature)return;archiveSignature=signature;$("empty").classList.toggle("hidden",records.length>0);$("archive-table").classList.toggle("hidden",records.length===0);$("archive-body").replaceChildren(...records.map((record,index)=>recordRow(record,records.length-index)));}catch(error){$("archive-error").textContent=error.message;$("archive-error").classList.remove("hidden");$("archive-count").textContent="Archive unavailable";}finally{archiveLoading=false;}
 }
 
 loadArchive();
